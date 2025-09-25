@@ -11,7 +11,7 @@ import ReactFlow, {
   Position,
 } from 'reactflow';
 import ReactMarkdown from 'react-markdown';
-import { X, FileText, Paperclip, TerminalSquare } from 'lucide-react';
+import { X, FileText, Paperclip, TerminalSquare, Plus, RotateCcw, Trash, Upload, Download, Share2 } from 'lucide-react';
 import 'reactflow/dist/style.css';
 
 const defaultEdgeOptions = {
@@ -208,9 +208,9 @@ function Sidebar({ node, onChange, onClose, onDelete }) {
               onDelete?.();
             }
           }}
-          className="border-[3px] border-black bg-red-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] hover:bg-red-300"
+          className="border-[3px] border-black bg-red-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] hover:bg-red-300 inline-flex items-center gap-1.5"
         >
-          Delete Node
+          <Trash size={14}/> <span>Delete Node</span>
         </button>
       </div>
     </div>
@@ -224,25 +224,25 @@ function Toolbar({ onAddUser, onAddBot, onAddSystem, onReset, onExport, onImport
       <div className="inline-flex items-center">
         {/* Left group: create + reset */}
         <div className="inline-flex items-center gap-2 pr-3">
-          <button onClick={onAddUser} className="border-[3px] border-black bg-sky-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000]">+ User</button>
-          <button onClick={onAddBot} className="border-[3px] border-black bg-lime-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000]">+ Bot</button>
-          <button onClick={onAddSystem} className="border-[3px] border-black bg-amber-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000]">+ System</button>
-          <button onClick={onReset} className="border-[3px] border-black bg-white px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000]">Reset</button>
+          <button onClick={onAddUser} className="border-[3px] border-black bg-sky-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><Plus size={14}/> <span>User</span></button>
+          <button onClick={onAddBot} className="border-[3px] border-black bg-lime-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><Plus size={14}/> <span>Bot</span></button>
+          <button onClick={onAddSystem} className="border-[3px] border-black bg-amber-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><Plus size={14}/> <span>System</span></button>
+          <button onClick={onReset} className="border-[3px] border-black bg-white px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><RotateCcw size={14}/> <span>Reset</span></button>
           <button
             onClick={onDelete}
             disabled={!hasSelection}
-            className={`border-[3px] border-black px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] ${hasSelection ? 'bg-red-200 hover:bg-red-300' : 'bg-gray-200 opacity-60 cursor-not-allowed'}`}
+            className={`border-[3px] border-black px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5 ${hasSelection ? 'bg-red-200 hover:bg-red-300' : 'bg-gray-200 opacity-60 cursor-not-allowed'}`}
           >
-            Delete
+            <Trash size={14}/> <span>Delete</span>
           </button>
         </div>
         {/* Divider */}
         <div className="mx-2 h-8 w-[3px] bg-black rounded-sm shadow-[2px_0_0_0_#000]" aria-hidden="true" />
         {/* Right group: export/import/share */}
         <div className="inline-flex items-center gap-2 pl-3">
-          <button onClick={onExport} className="border-[3px] border-black bg-white px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000]">Export</button>
-          <button onClick={onShare} className="border-[3px] border-black bg-white px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000]">Share</button>
-          <button onClick={onImportClick} className="border-[3px] border-black bg-white px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000]">Import</button>
+          <button onClick={onExport} className="border-[3px] border-black bg-white px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><Download size={14}/> <span>Export</span></button>
+          <button onClick={onShare} className="border-[3px] border-black bg-white px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><Share2 size={14}/> <span>Share</span></button>
+          <button onClick={onImportClick} className="border-[3px] border-black bg-white px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><Upload size={14}/> <span>Import</span></button>
         </div>
       </div>
     </div>
