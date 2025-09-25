@@ -16,7 +16,7 @@ import 'reactflow/dist/style.css';
 
 const defaultEdgeOptions = {
   style: { strokeWidth: 2, stroke: '#000000' },
-  animated: false,
+  animated: true,
 };
 
 const nbCard = 'rounded-xl border-[3px] border-black bg-white shadow-[6px_6px_0_0_#000] overflow-hidden';
@@ -99,9 +99,9 @@ const initialNodes = [
 ];
 
 const initialEdges = [
-  { id: 'e-u1-b1', source: 'u1', target: 'b1', type: 'smoothstep' },
-  { id: 'e-b1-s1', source: 'b1', target: 's1', type: 'smoothstep' },
-  { id: 'e-s1-b2', source: 's1', target: 'b2', type: 'smoothstep' },
+  { id: 'e-u1-b1', source: 'u1', target: 'b1', type: 'bezier', animated: true },
+  { id: 'e-b1-s1', source: 'b1', target: 's1', type: 'bezier', animated: true },
+  { id: 'e-s1-b2', source: 's1', target: 'b2', type: 'bezier', animated: true },
 ];
 
 // --- Persistence / Share helpers ---
@@ -121,7 +121,8 @@ function sanitizeGraph(parsed) {
     id: e.id ?? `e${i}`,
     source: e.source,
     target: e.target,
-    type: e.type ?? 'smoothstep',
+    type: e.type ?? 'bezier',
+    animated: e.animated ?? true,
   }));
   return { nodes: sanitizedNodes, edges: sanitizedEdges };
 }
@@ -162,7 +163,7 @@ function decodePreset(b64) {
 }
 
 // --- Sidebar ---
-function Sidebar({ node, onChange, onClose }) {
+function Sidebar({ node, onChange, onClose, onDelete }) {
   if (!node) return null;
   const { data, type } = node;
   return (
@@ -200,12 +201,24 @@ function Sidebar({ node, onChange, onClose }) {
           />
         </>
       )}
+      <div className="mt-auto pt-2 border-t border-black/30 flex justify-end">
+        <button
+          onClick={() => {
+            if (confirm('Delete this node? This will also remove connected edges.')) {
+              onDelete?.();
+            }
+          }}
+          className="border-[3px] border-black bg-red-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] hover:bg-red-300"
+        >
+          Delete Node
+        </button>
+      </div>
     </div>
   );
 }
 
 // --- Toolbar ---
-function Toolbar({ onAddUser, onAddBot, onAddSystem, onReset, onExport, onImportClick, onShare }) {
+function Toolbar({ onAddUser, onAddBot, onAddSystem, onReset, onExport, onImportClick, onShare, onDelete, hasSelection }) {
   return (
     <div className={nbCard + ' p-2 bg-white/90 backdrop-blur'}>
       <div className="inline-flex items-center">
@@ -215,6 +228,13 @@ function Toolbar({ onAddUser, onAddBot, onAddSystem, onReset, onExport, onImport
           <button onClick={onAddBot} className="border-[3px] border-black bg-lime-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000]">+ Bot</button>
           <button onClick={onAddSystem} className="border-[3px] border-black bg-amber-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000]">+ System</button>
           <button onClick={onReset} className="border-[3px] border-black bg-white px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000]">Reset</button>
+          <button
+            onClick={onDelete}
+            disabled={!hasSelection}
+            className={`border-[3px] border-black px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] ${hasSelection ? 'bg-red-200 hover:bg-red-300' : 'bg-gray-200 opacity-60 cursor-not-allowed'}`}
+          >
+            Delete
+          </button>
         </div>
         {/* Divider */}
         <div className="mx-2 h-8 w-[3px] bg-black rounded-sm shadow-[2px_0_0_0_#000]" aria-hidden="true" />
@@ -271,7 +291,10 @@ function FlowInner() {
 
   const selectedNode = useMemo(() => nodes.find((n) => n.id === selectedId), [nodes, selectedId]);
 
-  const onConnect = useCallback((connection) => setEdges((eds) => addEdge({ ...connection, type: 'smoothstep' }, eds)), [setEdges]);
+  const onConnect = useCallback(
+    (connection) => setEdges((eds) => addEdge({ ...connection, type: 'bezier', animated: true }, eds)),
+    [setEdges]
+  );
 
   const onAddUser = useCallback(() => {
     const id = `u${idRef.current++}`;
@@ -388,7 +411,7 @@ function FlowInner() {
         if (!Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) throw new Error('Invalid file format: missing nodes/edges arrays');
         // Basic sanitization: ensure each node has id & position
         const sanitizedNodes = parsed.nodes.map((n, i) => ({ id: n.id ?? `n${i}`, type: n.type ?? 'card', position: n.position ?? { x: Math.random()*600, y: Math.random()*300 }, data: n.data ?? {} }));
-        const sanitizedEdges = parsed.edges.map((e, i) => ({ id: e.id ?? `e${i}`, source: e.source, target: e.target, type: e.type ?? 'smoothstep' }));
+        const sanitizedEdges = parsed.edges.map((e, i) => ({ id: e.id ?? `e${i}`, source: e.source, target: e.target, type: e.type ?? 'bezier', animated: e.animated ?? true }));
         setNodes(sanitizedNodes);
         setEdges(sanitizedEdges);
         // update idRef to avoid id collision: find max numeric suffix
@@ -421,6 +444,12 @@ function FlowInner() {
     setNodes((nds) => nds.map((n) => (n.id === selectedId ? { ...n, data: { ...n.data, ...patch } } : n)));
   }, [selectedId, setNodes]);
 
+  const onDeleteSelected = useCallback(() => {
+    setNodes((nds) => nds.filter((n) => n.id !== selectedId));
+    setEdges((eds) => eds.filter((e) => e.source !== selectedId && e.target !== selectedId));
+    setSelectedId(null);
+  }, [selectedId, setNodes, setEdges]);
+
   // --- Share ---
   const shareFlow = useCallback(async () => {
     try {
@@ -439,13 +468,39 @@ function FlowInner() {
     }
   }, [nodes, edges]);
 
+  // Keyboard Delete support (when not typing in an input/textarea)
+  useEffect(() => {
+    const onKey = (e) => {
+      if (!selectedId) return;
+      const tag = (e.target?.tagName || '').toLowerCase();
+      const isEditable = tag === 'input' || tag === 'textarea' || e.target?.isContentEditable;
+      if (isEditable) return;
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        onDeleteSelected();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedId, onDeleteSelected]);
+
   return (
     <div className="relative w-full h-full" style={{ width: '100%', height: '100%' }}>
       <input ref={fileInputRef} type="file" accept="application/json" onChange={handleFileChange} style={{ display: 'none' }} />
       <div className="absolute z-10 left-4 top-4">
-        <Toolbar onAddUser={onAddUser} onAddBot={onAddBot} onAddSystem={onAddSystem} onReset={onReset} onExport={exportJSON} onImportClick={onImportClick} onShare={shareFlow} />
+        <Toolbar
+          onAddUser={onAddUser}
+          onAddBot={onAddBot}
+          onAddSystem={onAddSystem}
+          onReset={onReset}
+          onExport={exportJSON}
+          onImportClick={onImportClick}
+          onShare={shareFlow}
+          onDelete={onDeleteSelected}
+          hasSelection={!!selectedId}
+        />
       </div>
-      <Sidebar node={selectedNode} onChange={onSidebarChange} onClose={() => setSelectedId(null)} />
+      <Sidebar node={selectedNode} onChange={onSidebarChange} onClose={() => setSelectedId(null)} onDelete={onDeleteSelected} />
       <ReactFlow
         key={rfKey}
         nodes={nodes}
@@ -457,6 +512,8 @@ function FlowInner() {
         onConnect={onConnect}
         onNodeClick={onNodeClick}
         onPaneClick={onPaneClick}
+        snapToGrid
+        snapGrid={[20, 20]}
         fitView
         fitViewOptions={{ padding: 0.3 }}
         proOptions={{ hideAttribution: true }}
