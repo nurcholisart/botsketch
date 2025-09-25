@@ -10,9 +10,11 @@ import ReactFlow, {
   Handle,
   Position,
 } from 'reactflow';
+import { NodeResizer } from '@reactflow/node-resizer';
 import ReactMarkdown from 'react-markdown';
 import { X, FileText, TerminalSquare, Plus, RotateCcw, Trash, Upload, Download, Share2 } from 'lucide-react';
 import 'reactflow/dist/style.css';
+import '@reactflow/node-resizer/dist/style.css';
 
 const defaultEdgeOptions = {
   style: { strokeWidth: 2, stroke: '#000000' },
@@ -22,25 +24,27 @@ const defaultEdgeOptions = {
 const nbCard = 'rounded-xl border-[3px] border-black bg-white shadow-[6px_6px_0_0_#000] overflow-hidden';
 
 // --- Node Types ---
-const CardNode = ({ data }) => (
-  <div className={nbCard + ' w-56'}>
+const CardNode = ({ data, selected }) => (
+  <div className={nbCard + ' w-full h-full flex flex-col'}>
+    <NodeResizer isVisible={selected} minWidth={180} minHeight={92} lineClassName="!border-black" handleClassName="!bg-black" />
     <div className="px-4 py-3 border-b-[3px] border-black bg-slate-100 rounded-t-xl">
       <p className="text-sm font-semibold text-slate-900">{data.title ?? 'Untitled'}</p>
       {data.subtitle && <p className="text-xs text-slate-600 mt-0.5">{data.subtitle}</p>}
     </div>
-    <div className="p-4 text-xs text-slate-700">{data.body ?? 'Drop wires here or connect to another node.'}</div>
+    <div className="flex-1 p-4 text-xs text-slate-700">{data.body ?? 'Drop wires here or connect to another node.'}</div>
     <Handle type="target" position={Position.Left} id="in" className="!bg-black !w-3 !h-3" />
     <Handle type="source" position={Position.Right} id="out" className="!bg-black !w-3 !h-3" />
   </div>
 );
 
-const UserMsgNode = ({ data }) => (
-  <div className={nbCard + ' w-64 bg-sky-100'}>
+const UserMsgNode = ({ data, selected }) => (
+  <div className={nbCard + ' w-full h-full bg-sky-100 flex flex-col'}>
+    <NodeResizer isVisible={selected} minWidth={200} minHeight={88} lineClassName="!border-black" handleClassName="!bg-black" />
     <div className="px-4 py-2 border-b-[3px] border-black bg-sky-300 flex items-center gap-2 rounded-t-xl">
       <span className="inline-flex h-2.5 w-2.5 bg-black" />
       <p className="text-xs font-bold uppercase">User</p>
     </div>
-    <div className="p-3 space-y-2 text-xs text-slate-900">
+    <div className="flex-1 p-3 space-y-2 text-xs text-slate-900">
       {data.text && (
         <div className="prose prose-xs max-w-none">
           <ReactMarkdown>{data.text}</ReactMarkdown>
@@ -52,13 +56,14 @@ const UserMsgNode = ({ data }) => (
   </div>
 );
 
-const BotMsgNode = ({ data }) => (
-  <div className={nbCard + ' w-72 bg-lime-100'}>
+const BotMsgNode = ({ data, selected }) => (
+  <div className={nbCard + ' w-full h-full bg-lime-100 flex flex-col'}>
+    <NodeResizer isVisible={selected} minWidth={220} minHeight={88} lineClassName="!border-black" handleClassName="!bg-black" />
     <div className="px-4 py-2 border-b-[3px] border-black bg-lime-300 flex items-center gap-2 rounded-t-xl">
       <span className="inline-flex h-2.5 w-2.5 bg-black" />
       <p className="text-xs font-bold uppercase">Chatbot</p>
     </div>
-    <div className="p-3 space-y-2 text-xs text-slate-900">
+    <div className="flex-1 p-3 space-y-2 text-xs text-slate-900">
       {data.text && (
         <div className="prose prose-xs max-w-none">
           <ReactMarkdown>{data.text}</ReactMarkdown>
@@ -70,13 +75,14 @@ const BotMsgNode = ({ data }) => (
   </div>
 );
 
-const SystemActionNode = ({ data }) => (
-  <div className={nbCard + ' w-64 bg-amber-100'}>
+const SystemActionNode = ({ data, selected }) => (
+  <div className={nbCard + ' w-full h-full bg-amber-100 flex flex-col'}>
+    <NodeResizer isVisible={selected} minWidth={200} minHeight={88} lineClassName="!border-black" handleClassName="!bg-black" />
     <div className="px-4 py-2 border-b-[3px] border-black bg-amber-300 flex items-center gap-2 rounded-t-xl">
       <TerminalSquare size={14} />
       <p className="text-xs font-bold uppercase">System Action</p>
     </div>
-    <div className="p-3 text-xs text-slate-900">
+    <div className="flex-1 p-3 text-xs text-slate-900">
       {data.text && (
         <div className="prose prose-xs max-w-none">
           <ReactMarkdown>{data.text}</ReactMarkdown>
@@ -88,7 +94,26 @@ const SystemActionNode = ({ data }) => (
   </div>
 );
 
-const nodeTypes = Object.freeze({ card: CardNode, user: UserMsgNode, bot: BotMsgNode, system: SystemActionNode });
+const NoteNode = ({ data, selected }) => (
+  <div className={nbCard + ' w-full h-full bg-violet-100 flex flex-col'}>
+    <NodeResizer isVisible={selected} minWidth={160} minHeight={72} lineClassName="!border-black" handleClassName="!bg-black" />
+    <div className="px-4 py-2 border-b-[3px] border-black bg-violet-300 flex items-center gap-2 rounded-t-xl">
+      <span className="inline-flex h-2.5 w-2.5 bg-black" />
+      <p className="text-xs font-bold uppercase">Note</p>
+    </div>
+    <div className="flex-1 p-3 text-xs text-slate-900">
+      {data.text && (
+        <div className="prose prose-xs max-w-none">
+          <ReactMarkdown>{data.text}</ReactMarkdown>
+        </div>
+      )}
+      {!data.text && <p className="text-slate-600">Write your note in the sidebar…</p>}
+    </div>
+    {/* No handles: cannot connect to or from Note */}
+  </div>
+);
+
+const nodeTypes = Object.freeze({ card: CardNode, user: UserMsgNode, bot: BotMsgNode, system: SystemActionNode, note: NoteNode });
 
 // --- Initial Graph ---
 const initialNodes = [
@@ -217,7 +242,7 @@ function Sidebar({ node, onChange, onClose, onDelete }) {
 }
 
 // --- Toolbar ---
-function Toolbar({ onAddUser, onAddBot, onAddSystem, onReset, onExport, onImportClick, onShare, onDelete, hasSelection }) {
+function Toolbar({ onAddUser, onAddBot, onAddSystem, onAddNote, onReset, onExport, onImportClick, onShare, onDelete, hasSelection }) {
   return (
     <div className={nbCard + ' p-2 bg-white/90 backdrop-blur'}>
       <div className="inline-flex items-center">
@@ -226,6 +251,7 @@ function Toolbar({ onAddUser, onAddBot, onAddSystem, onReset, onExport, onImport
           <button onClick={onAddUser} className="border-[3px] border-black bg-sky-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><Plus size={14}/> <span>User</span></button>
           <button onClick={onAddBot} className="border-[3px] border-black bg-lime-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><Plus size={14}/> <span>Bot</span></button>
           <button onClick={onAddSystem} className="border-[3px] border-black bg-amber-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><Plus size={14}/> <span>System</span></button>
+          <button onClick={onAddNote} className="border-[3px] border-black bg-violet-200 px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><Plus size={14}/> <span>Note</span></button>
           <button onClick={onReset} className="border-[3px] border-black bg-white px-3 py-1.5 text-sm rounded-md shadow-[4px_4px_0_0_#000] inline-flex items-center gap-1.5"><RotateCcw size={14}/> <span>Reset</span></button>
           <button
             onClick={onDelete}
@@ -290,9 +316,23 @@ function FlowInner() {
 
   const selectedNode = useMemo(() => nodes.find((n) => n.id === selectedId), [nodes, selectedId]);
 
+  const filterEdgesForNotes = useCallback((eds, nds) => {
+    const map = new Map(nds.map((n) => [n.id, n.type]));
+    return eds.filter((e) => map.get(e.source) !== 'note' && map.get(e.target) !== 'note');
+  }, []);
+
   const onConnect = useCallback(
-    (connection) => setEdges((eds) => addEdge({ ...connection, type: 'bezier', animated: true }, eds)),
-    [setEdges]
+    (connection) => {
+      setEdges((eds) => {
+        const src = nodes.find((n) => n.id === connection.source);
+        const tgt = nodes.find((n) => n.id === connection.target);
+        if (src?.type === 'note' || tgt?.type === 'note') {
+          return eds; // disallow connections to/from note
+        }
+        return addEdge({ ...connection, type: 'bezier', animated: true }, eds);
+      });
+    },
+    [nodes, setEdges]
   );
 
   const onAddUser = useCallback(() => {
@@ -313,6 +353,12 @@ function FlowInner() {
     setSelectedId(id);
   }, [setNodes]);
 
+  const onAddNote = useCallback(() => {
+    const id = `n${idRef.current++}`;
+    setNodes((nds) => [...nds, { id, type: 'note', position: { x: Math.random()*800, y: Math.random()*400 }, data: { text: '' } }]);
+    setSelectedId(id);
+  }, [setNodes]);
+
   const onReset = useCallback(() => {
     idRef.current = 5;
     setNodes(initialNodes);
@@ -329,15 +375,16 @@ function FlowInner() {
       if (preset) {
         const parsed = decodePreset(preset);
         const { nodes: n, edges: e } = sanitizeGraph(parsed);
+        const e2 = filterEdgesForNotes(e, n);
         setNodes(n);
-        setEdges(e);
+        setEdges(e2);
         idRef.current = nextIdFromNodes(n);
         setRfKey((k) => k + 1);
         setSelectedId(null);
         try {
           localStorage.setItem(
             STORAGE_KEY,
-            JSON.stringify({ nodes: n, edges: e, importedAt: new Date().toISOString() })
+            JSON.stringify({ nodes: n, edges: e2, importedAt: new Date().toISOString() })
           );
         } catch {}
         return; // Do not also load from storage
@@ -349,8 +396,9 @@ function FlowInner() {
       if (!raw) return;
       const parsed = JSON.parse(raw);
       const { nodes: n, edges: e } = sanitizeGraph(parsed);
+      const e2 = filterEdgesForNotes(e, n);
       setNodes(n);
-      setEdges(e);
+      setEdges(e2);
       idRef.current = nextIdFromNodes(n);
       setRfKey((k) => k + 1);
       setSelectedId(null);
@@ -411,8 +459,9 @@ function FlowInner() {
         // Basic sanitization: ensure each node has id & position
         const sanitizedNodes = parsed.nodes.map((n, i) => ({ id: n.id ?? `n${i}`, type: n.type ?? 'card', position: n.position ?? { x: Math.random()*600, y: Math.random()*300 }, data: n.data ?? {} }));
         const sanitizedEdges = parsed.edges.map((e, i) => ({ id: e.id ?? `e${i}`, source: e.source, target: e.target, type: e.type ?? 'bezier', animated: e.animated ?? true }));
+        const filteredEdges = filterEdgesForNotes(sanitizedEdges, sanitizedNodes);
         setNodes(sanitizedNodes);
-        setEdges(sanitizedEdges);
+        setEdges(filteredEdges);
         // update idRef to avoid id collision: find max numeric suffix
         const nums = sanitizedNodes.map(n => { const m = String(n.id).match(/(\d+)$/); return m ? parseInt(m[1],10) : 0; });
         const maxNum = nums.length ? Math.max(...nums) : 0;
@@ -422,7 +471,7 @@ function FlowInner() {
         try {
           localStorage.setItem(
             STORAGE_KEY,
-            JSON.stringify({ nodes: sanitizedNodes, edges: sanitizedEdges, importedAt: new Date().toISOString() })
+            JSON.stringify({ nodes: sanitizedNodes, edges: filteredEdges, importedAt: new Date().toISOString() })
           );
         } catch {}
         alert('Import successful');
@@ -491,6 +540,7 @@ function FlowInner() {
           onAddUser={onAddUser}
           onAddBot={onAddBot}
           onAddSystem={onAddSystem}
+          onAddNote={onAddNote}
           onReset={onReset}
           onExport={exportJSON}
           onImportClick={onImportClick}
