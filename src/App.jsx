@@ -11,7 +11,7 @@ import ReactFlow, {
   Position,
 } from 'reactflow';
 import ReactMarkdown from 'react-markdown';
-import { X, FileText, Paperclip, TerminalSquare, Plus, RotateCcw, Trash, Upload, Download, Share2 } from 'lucide-react';
+import { X, FileText, TerminalSquare, Plus, RotateCcw, Trash, Upload, Download, Share2 } from 'lucide-react';
 import 'reactflow/dist/style.css';
 
 const defaultEdgeOptions = {
@@ -166,6 +166,16 @@ function decodePreset(b64) {
 function Sidebar({ node, onChange, onClose, onDelete }) {
   if (!node) return null;
   const { data, type } = node;
+  const taRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const el = taRef.current;
+    if (!el) return;
+    // Reset height to compute shrink/grow based on content
+    el.style.height = 'auto';
+    const lh = parseFloat(getComputedStyle(el).lineHeight || '0') || 20;
+    el.style.height = `${el.scrollHeight + lh * 0.5}px`;
+  }, [data.text]);
   return (
     <div className="absolute right-0 top-0 w-80 h-full bg-white border-l-[3px] border-black shadow-[-6px_0_0_0_#000] p-4 overflow-y-auto z-20 flex flex-col">
       <div className="flex justify-between items-center mb-4 border-b pb-2 border-black">
@@ -176,31 +186,20 @@ function Sidebar({ node, onChange, onClose, onDelete }) {
       </div>
       <label className="flex items-center gap-2 text-xs font-bold mb-1"><FileText size={14}/> Text (Markdown)</label>
       <textarea
-        className="w-full border-[2px] border-black p-1 text-sm mb-3 rounded-md"
-        rows={4}
+        ref={taRef}
+        className="w-full border-[2px] border-black p-1 text-sm mb-3 rounded-md resize-none overflow-hidden"
+        rows={1}
         value={data.text || ''}
         onChange={(e) => onChange({ text: e.target.value })}
+        onInput={(e) => {
+          const el = e.currentTarget;
+          el.style.height = 'auto';
+          const lh = parseFloat(getComputedStyle(el).lineHeight || '0') || 20;
+          el.style.height = `${el.scrollHeight + lh * 0.5}px`;
+        }}
       />
-      {type === 'user' && (
-        <>
-          <label className="flex items-center gap-2 text-xs font-bold mb-1"><Paperclip size={14}/> File URL</label>
-          <input
-            className="w-full border-[2px] border-black p-1 text-sm mb-3 rounded-md"
-            value={data.file || ''}
-            onChange={(e) => onChange({ file: e.target.value })}
-          />
-        </>
-      )}
-      {type === 'bot' && (
-        <>
-          <label className="flex items-center gap-2 text-xs font-bold mb-1"><Paperclip size={14}/> Attachment</label>
-          <input
-            className="w-full border-[2px] border-black p-1 text-sm mb-3 rounded-md"
-            value={data.attachment || ''}
-            onChange={(e) => onChange({ attachment: e.target.value })}
-          />
-        </>
-      )}
+      {/* User file URL field removed as it's unused */}
+      {/* Bot attachment field removed as it's unused */}
       <div className="mt-auto pt-2 border-t border-black/30 flex justify-end">
         <button
           onClick={() => {
